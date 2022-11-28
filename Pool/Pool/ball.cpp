@@ -11,7 +11,6 @@ Ball::Ball(Vector2 position, Color color, TypeOfBall type, int id)
 	direction = { 0 };
 	onGame = true;
 	isMoving = false;
-	texture = { NULL };
 }
 
 Ball::~Ball()
@@ -80,16 +79,11 @@ void Ball::SetIsMoving(bool _isMoving)
 void Ball::Draw()
 {
 	DrawCircle(static_cast<int>(position.x), static_cast<int>(position.y), static_cast<float>(radius), color);
-	if (GetType() == TypeOfBall::STRIPED)
-	{
-		DrawTexture(texture, static_cast<int>(position.x - 16), static_cast<int>(position.y - 16), WHITE);
-	}
 }
 
 
 void Ball::Hit(Vector2 mousePosition)
 {
-
 	Vector2 forceOfHit = { (position.x - mousePosition.x) * 2,(position.y - mousePosition.y) * 2 }; //La fuerza es el doble de la diferencia entre la posición del mouse y la pelota
 	if (forceOfHit.x > 1280 || forceOfHit.y > 720)
 	{
@@ -122,9 +116,4 @@ void Ball::Move(Vector2 _movement)
 int Ball::GetID()
 {
 	return id;
-}
-
-void Ball::SetTexture(Texture2D _texture)
-{
-	this->texture = _texture;
 }

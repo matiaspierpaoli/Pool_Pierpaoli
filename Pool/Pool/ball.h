@@ -23,7 +23,6 @@ const float airFriction = constantAirFriction * 0.5f * airDensity * (radius * ra
 class Ball
 {
 private:
-	Texture2D texture;
 	Vector2 acceleration;
 	Vector2 position;
 	Vector2 direction;
@@ -53,6 +52,5 @@ public:
 	Vector2 GetAcceleration();
 	void SetAcceleration(Vector2 acceleration);
 	void Move(Vector2 movement);
-	void SetTexture(Texture2D texture);
 	int GetID();
 };
