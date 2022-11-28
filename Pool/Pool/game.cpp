@@ -19,8 +19,8 @@ Game::~Game()
 
 void Game::BallBallCollision(vector<Ball*> _balls)
 {
-	for (auto& ball : balls) {
-
+	for (auto& ball : balls) 
+	{
 		//Se resta, ya que de otra forma las bolas nunca frenarian y mantendrian una velocidad constante o incremental
 		ball->SetAcceleration({ -(ball->GetVelocity().x * 0.8f + friction * GetFrameTime() + airFriction * GetFrameTime()),-(ball->GetVelocity().y * 0.8f + friction * GetFrameTime() + airFriction * GetFrameTime()) });
 
@@ -301,6 +301,7 @@ void Game::Update()
 void Game::Draw()
 {
 	BeginDrawing();
+
 	if (!gameOver)
 	{
 		ClearBackground(DARKGREEN);
@@ -318,7 +319,8 @@ void Game::Draw()
 				balls[i]->Draw();
 			}
 		}
-		if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !whiteBallHit) {
+		if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !whiteBallHit) 
+		{
 			DrawLineEx({ GetMousePosition().x, GetMousePosition().y }, { balls[0]->GetPosition().x, balls[0]->GetPosition().y }, 10, BLACK);
 		}
 		if (playerOneTurn)
@@ -329,7 +331,6 @@ void Game::Draw()
 		{
 			DrawText("P2", screenWidth / 4 - 60, screenHeight / 4 - 180, 40, BLACK);
 		}
-
 	}
 
 	EndDrawing();
@@ -385,9 +386,9 @@ void Game::Init()
 	borders.push_back(new Border(BorderPosition::DOWNRIGHT, downRight));
 	borders.push_back(new Border(BorderPosition::LEFT, left));
 	borders.push_back(new Border(BorderPosition::RIGHT, right));
-	balls.push_back(new Ball({ static_cast<float>(screenWidth * 2 / 10),static_cast<float>(screenHeight / 2) }, WHITE, TypeOfBall::WHITEBALL, 0));
-	balls.push_back(new Ball({ static_cast<float>(screenWidth * 7 / 10),static_cast<float>(screenHeight * 5 / 10) }, RED, TypeOfBall::REDBALL, 1));
-	balls.push_back(new Ball({ static_cast<float>(screenWidth * 7.4f / 10),screenHeight * 4.6f / 10 }, RED, TypeOfBall::REDBALL, 2));
+	balls.push_back(new Ball({ (screenWidth * 2 / 10),(screenHeight / 2) }, WHITE, TypeOfBall::WHITEBALL, 0));
+	balls.push_back(new Ball({ (screenWidth * 7 / 10),(screenHeight * 5 / 10) }, RED, TypeOfBall::REDBALL, 1));
+	balls.push_back(new Ball({ (screenWidth * 7.4f / 10),screenHeight * 4.6f / 10 }, RED, TypeOfBall::REDBALL, 2));
 	balls.push_back(new Ball({ screenWidth * 7.4f / 10,screenHeight * 5.4f / 10 }, BLUE, TypeOfBall::BLUEBALL, 3));
 	balls.push_back(new Ball({ screenWidth * 7.8f / 10,screenHeight * 4.2f / 10 }, BLUE, TypeOfBall::BLUEBALL, 4));
 	balls.push_back(new Ball({ screenWidth * 7.8f / 10,screenHeight * 5 / 10 }, BLACK, TypeOfBall::BLACKBALL, 5));
@@ -413,7 +414,6 @@ void Game::Input()
 		balls[0]->Hit(mousePosition);
 		whiteBallHit = true;
 	}
-
 }
 
 void Game::DeInit()
