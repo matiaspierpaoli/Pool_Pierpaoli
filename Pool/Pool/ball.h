@@ -7,10 +7,11 @@ enum class TypeOfBall
 {
 	WHITEBALL,
 	BLACKBALL,
-	STRIPED,
-	SMOOTH
+	REDBALL,
+	BLUEBALL
 };
 
+//Variables generadas gracias a https://www.maplesoft.com/applications/Preview.aspx?id=3811
 const float tableFriction = 0.2f;
 const float gravity = 9.8f;
 const float airDensity = 1.225f;

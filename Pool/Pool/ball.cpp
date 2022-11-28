@@ -85,10 +85,13 @@ void Ball::Draw()
 void Ball::Hit(Vector2 mousePosition)
 {
 	Vector2 forceOfHit = { (position.x - mousePosition.x) * 2,(position.y - mousePosition.y) * 2 }; //La fuerza es el doble de la diferencia entre la posición del mouse y la pelota
+
+	//No permite que sea mayor que 1280 o 720
 	if (forceOfHit.x > 1280 || forceOfHit.y > 720)
 	{
 		forceOfHit = { 1280,720 };
 	}
+
 	SetVelocity(forceOfHit);
 }
 

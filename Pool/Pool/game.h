@@ -17,8 +17,6 @@ private:
 	vector<Border*> borders;
 	vector<Hole*> holes;
 	vector<pair<Ball*, Ball*>> CollidingBalls;
-	Texture2D playerOneWins;
-	Texture2D playerTwoWins;
 	bool playerOneTurn;
 	bool gameOver;
 	bool playerOneWon;

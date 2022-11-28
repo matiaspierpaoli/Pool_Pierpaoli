@@ -10,8 +10,6 @@ Game::Game()
 	whiteBallHit = false;
 	gameOver = false;
 	ballsOnGame = 16;
-	playerOneWins = { NULL };
-	playerTwoWins = { NULL };
 }
 
 Game::~Game()
@@ -19,43 +17,56 @@ Game::~Game()
 
 }
 
-void Game::BallBallCollision(vector<Ball*> _balls) {
+void Game::BallBallCollision(vector<Ball*> _balls)
+{
 	for (auto& ball : balls) {
 
-		//Seteo la aceleracion de la bola
+		//Se resta, ya que de otra forma las bolas nunca frenarian y mantendrian una velocidad constante o incremental
 		ball->SetAcceleration({ -(ball->GetVelocity().x * 0.8f + friction * GetFrameTime() + airFriction * GetFrameTime()),-(ball->GetVelocity().y * 0.8f + friction * GetFrameTime() + airFriction * GetFrameTime()) });
 
 		// Fisicas de las balls
+		// Se setea la velocidad de la bola
 		ball->SetVelocity({ ball->GetVelocity().x + ball->GetAcceleration().x * GetFrameTime(), ball->GetVelocity().y + ball->GetAcceleration().y * GetFrameTime() });
+
+		//Se setea su posicion
 		ball->SetPosition({ ball->GetPosition().x + ball->GetVelocity().x * GetFrameTime(), ball->GetPosition().y + ball->GetVelocity().y * GetFrameTime() });
 
-		// Si la velocidad de la bola en X o en Y es menor que 0 entonces seteo todo en 0. Fabs me devuelve un valor absoluto
-		if (fabs(ball->GetVelocity().x * ball->GetVelocity().x + ball->GetVelocity().y * ball->GetVelocity().y) < 1) {
+		// Si la velocidad de la bola en X o en Y es menor que 1 entonces seteo todo en 0. Fabs me devuelve un valor absoluto
+		if (fabs(ball->GetVelocity().x * ball->GetVelocity().x + ball->GetVelocity().y * ball->GetVelocity().y) < 1) 
+		{
 			ball->SetVelocity({ 0,0 });
 			ball->SetAcceleration({ 0,0 });
 		}
 	}
 
-	for (auto& ball : balls) {
-		for (auto& target : balls) {
-			if (ball->GetID() != target->GetID() && ball->GetOnGame() && target->GetOnGame()) {
+	for (auto& ball : balls) 
+	{
+		for (auto& target : balls) 
+		{
+			if (ball->GetID() != target->GetID() && ball->GetOnGame() && target->GetOnGame())
+			{
+				//Si la distancia entre ambas es menor o igual al radio por 2, significa que colisionan  PITAGORAS
 				if (sqrt(pow(ball->GetPosition().x - target->GetPosition().x, 2) + pow(ball->GetPosition().y - target->GetPosition().y, 2)) <= (double)radius * 2)
 				{
 					CollidingBalls.push_back({ ball, target });
+
+					//Lo uso para que las bolas no se queden overlapeadas, de esta manera chocan en su radio
 					float distance = sqrtf(powf(ball->GetPosition().x - target->GetPosition().x, 2) + powf(ball->GetPosition().y - target->GetPosition().y, 2));
 					float overlap = 0.5f * (distance - radius * 2);
-					ball->SetPosition({ ball->GetPosition().x - overlap * (ball->GetPosition().x - target->GetPosition().x) / distance, ball->GetPosition().y - overlap * (ball->GetPosition().y - target->GetPosition().y) / distance });
 
+					//Les seteo nuevamente su posicion
+					ball->SetPosition({ ball->GetPosition().x - overlap * (ball->GetPosition().x - target->GetPosition().x) / distance, ball->GetPosition().y - overlap * (ball->GetPosition().y - target->GetPosition().y) / distance });
 					target->SetPosition({ target->GetPosition().x + overlap * (ball->GetPosition().x - target->GetPosition().x) / distance, target->GetPosition().y + overlap * (ball->GetPosition().y - target->GetPosition().y) / distance });
 				}
 			}
 		}
 	}
 
-	for (auto& collision : CollidingBalls) {
+	for (auto& collision : CollidingBalls)
+	{
 		Ball* ball1 = collision.first;
 		Ball* ball2 = collision.second;
-
+		
 		float ballsDistance = sqrtf(powf(ball2->GetPosition().x - ball1->GetPosition().x, 2) + powf(ball2->GetPosition().y - ball1->GetPosition().y, 2));
 
 		float normalX = (ball2->GetPosition().x - ball1->GetPosition().x) / ballsDistance;
@@ -81,40 +92,59 @@ void Game::BallBallCollision(vector<Ball*> _balls) {
 }
 
 //Collision Circle Rect
-void Game::BorderBallCollision(vector<Border*> _borders, Ball* _ball) {
-	for (unsigned int i = 0; i < borders.size(); i++) {
-		if (borders[i]->GetBorderPosition() == BorderPosition::UPLEFT) {
-			if (_ball->GetPosition().x + radius >= borders[i]->GetBorderRec().x && _ball->GetPosition().x - radius <= borders[i]->GetBorderRec().x + borders[i]->GetBorderRec().width && _ball->GetPosition().y - radius <= borders[i]->GetBorderRec().y + borders[i]->GetBorderRec().height) {
+//https://ants.inf.um.es/staff/jlaguna/tp/tutoriales/colisiones/index.html
+
+void Game::BorderBallCollision(vector<Border*> _borders, Ball* _ball) 
+{
+	for (unsigned int i = 0; i < borders.size(); i++) 
+	{
+		//Dependiendo el borde con el que colisione
+		if (borders[i]->GetBorderPosition() == BorderPosition::UPLEFT) 
+		{
+			//Simple colision Circulo Rectangulo
+			if (_ball->GetPosition().x + radius >= borders[i]->GetBorderRec().x && _ball->GetPosition().x - radius <= borders[i]->GetBorderRec().x + borders[i]->GetBorderRec().width && _ball->GetPosition().y - radius <= borders[i]->GetBorderRec().y + borders[i]->GetBorderRec().height) 
+			{
+				//Cambia la trayectoria de la pelota y evita que se vaya de la mesa
 				_ball->SetPosition({ _ball->GetPosition().x, borders[i]->GetBorderRec().y + borders[i]->GetBorderRec().height + radius });
 				_ball->SetVelocity({ _ball->GetVelocity().x / 2, -_ball->GetVelocity().y / 2 });
 			}
 		}
-		else if (borders[i]->GetBorderPosition() == BorderPosition::UPRIGHT) {
-			if (_ball->GetPosition().x + radius >= borders[i]->GetBorderRec().x && _ball->GetPosition().x - radius <= borders[i]->GetBorderRec().x + borders[i]->GetBorderRec().width && _ball->GetPosition().y - radius <= borders[i]->GetBorderRec().y + borders[i]->GetBorderRec().height) {
+		else if (borders[i]->GetBorderPosition() == BorderPosition::UPRIGHT) 
+		{
+			if (_ball->GetPosition().x + radius >= borders[i]->GetBorderRec().x && _ball->GetPosition().x - radius <= borders[i]->GetBorderRec().x + borders[i]->GetBorderRec().width && _ball->GetPosition().y - radius <= borders[i]->GetBorderRec().y + borders[i]->GetBorderRec().height) 
+			{
 				_ball->SetPosition({ _ball->GetPosition().x, borders[i]->GetBorderRec().y + borders[i]->GetBorderRec().height + radius });
 				_ball->SetVelocity({ _ball->GetVelocity().x / 2, -_ball->GetVelocity().y / 2 });
 			}
 		}
-		else if (borders[i]->GetBorderPosition() == BorderPosition::DOWNLEFT) {
-			if (_ball->GetPosition().x + radius >= borders[i]->GetBorderRec().x && _ball->GetPosition().x - radius <= borders[i]->GetBorderRec().x + borders[i]->GetBorderRec().width && _ball->GetPosition().y + radius >= borders[i]->GetBorderRec().y) {
+		else if (borders[i]->GetBorderPosition() == BorderPosition::DOWNLEFT) 
+		{
+			if (_ball->GetPosition().x + radius >= borders[i]->GetBorderRec().x && _ball->GetPosition().x - radius <= borders[i]->GetBorderRec().x + borders[i]->GetBorderRec().width && _ball->GetPosition().y + radius >= borders[i]->GetBorderRec().y) 
+			{
 				_ball->SetPosition({ _ball->GetPosition().x, borders[i]->GetBorderRec().y - radius });
 				_ball->SetVelocity({ _ball->GetVelocity().x / 2, -_ball->GetVelocity().y / 2 });
 			}
 		}
-		else if (borders[i]->GetBorderPosition() == BorderPosition::DOWNRIGHT) {
-			if (_ball->GetPosition().x + radius >= borders[i]->GetBorderRec().x && _ball->GetPosition().x - radius <= borders[i]->GetBorderRec().x + borders[i]->GetBorderRec().width && _ball->GetPosition().y + radius >= borders[i]->GetBorderRec().y) {
+		else if (borders[i]->GetBorderPosition() == BorderPosition::DOWNRIGHT) 
+		{
+			if (_ball->GetPosition().x + radius >= borders[i]->GetBorderRec().x && _ball->GetPosition().x - radius <= borders[i]->GetBorderRec().x + borders[i]->GetBorderRec().width && _ball->GetPosition().y + radius >= borders[i]->GetBorderRec().y) 
+			{
 				_ball->SetPosition({ _ball->GetPosition().x, borders[i]->GetBorderRec().y - radius });
 				_ball->SetVelocity({ _ball->GetVelocity().x / 2 , -_ball->GetVelocity().y / 2 });
 			}
 		}
-		else if (borders[i]->GetBorderPosition() == BorderPosition::RIGHT) {
-			if (_ball->GetPosition().x + radius >= borders[i]->GetBorderRec().x && _ball->GetPosition().y + radius >= borders[i]->GetBorderRec().y && _ball->GetPosition().y - radius <= borders[i]->GetBorderRec().y + borders[i]->GetBorderRec().height) {
+		else if (borders[i]->GetBorderPosition() == BorderPosition::RIGHT) 
+		{
+			if (_ball->GetPosition().x + radius >= borders[i]->GetBorderRec().x && _ball->GetPosition().y + radius >= borders[i]->GetBorderRec().y && _ball->GetPosition().y - radius <= borders[i]->GetBorderRec().y + borders[i]->GetBorderRec().height) 
+			{
 				_ball->SetPosition({ _ball->GetPosition().x - radius , _ball->GetPosition().y });
 				_ball->SetVelocity({ -_ball->GetVelocity().x / 2, _ball->GetVelocity().y / 2 });
 			}
 		}
-		else if (borders[i]->GetBorderPosition() == BorderPosition::LEFT) {
-			if (_ball->GetPosition().x - radius <= borders[i]->GetBorderRec().x + borders[i]->GetBorderRec().width && _ball->GetPosition().y - radius >= borders[i]->GetBorderRec().y && _ball->GetPosition().y - radius <= borders[i]->GetBorderRec().y + borders[i]->GetBorderRec().height) {
+		else if (borders[i]->GetBorderPosition() == BorderPosition::LEFT) 
+		{
+			if (_ball->GetPosition().x - radius <= borders[i]->GetBorderRec().x + borders[i]->GetBorderRec().width && _ball->GetPosition().y - radius >= borders[i]->GetBorderRec().y && _ball->GetPosition().y - radius <= borders[i]->GetBorderRec().y + borders[i]->GetBorderRec().height) 
+			{
 				_ball->SetPosition({ borders[i]->GetBorderRec().x + borders[i]->GetBorderRec().width + radius , _ball->GetPosition().y });
 				_ball->SetVelocity({ -_ball->GetVelocity().x / 2 , _ball->GetVelocity().y / 2 });
 			}
@@ -127,8 +157,10 @@ void Game::HoleBallCollision(vector<Hole*> _holes, Ball* _ball)
 {
 	for (unsigned int i = 0; i < holes.size(); i++)
 	{
+		//Pitagoras para saber la distancia entra la bola y el hoyo
 		if (sqrt(pow(holes[i]->GetPosition().x - _ball->GetPosition().x, 2) + pow(holes[i]->GetPosition().y - _ball->GetPosition().y, 2)) < (holes[i]->GetRadius() + radius) / 2)
 		{
+			//Si la bola que entra es blanca entonces vuelve a la posicion Inicial
 			if (_ball->GetType() == TypeOfBall::WHITEBALL)
 			{
 				_ball->SetPosition({ screenWidth * 2 / 10, screenHeight / 2 });
@@ -136,24 +168,30 @@ void Game::HoleBallCollision(vector<Hole*> _holes, Ball* _ball)
 				_ball->SetVelocity({ 0, 0 });
 				_ball->SetAcceleration({ 0 });
 			}
+			//Si la bola es negra y no metio todas las pelotas entonces pierde
 			if (_ball->GetType() == TypeOfBall::BLACKBALL)
 			{
+				//Creo variables para hacer el recuento de bolas
 				int counterStriped = 0;
 				int counterSmooth = 0;
+
+				//Cuento las bolas y de que tipo son
 				for (unsigned int j = 0; j < balls.size(); j++)
 				{
-					if (!balls[j]->GetOnGame() && balls[j]->GetType() == TypeOfBall::STRIPED)
+					if (!balls[j]->GetOnGame() && balls[j]->GetType() == TypeOfBall::REDBALL)
 					{
 						counterStriped++;
 					}
-					if (!balls[j]->GetOnGame() && balls[j]->GetType() == TypeOfBall::SMOOTH)
+					if (!balls[j]->GetOnGame() && balls[j]->GetType() == TypeOfBall::BLUEBALL)
 					{
 						counterSmooth++;
 					}
 				}
-
+				
+				//Compruebo el turno de quien era
 				if (playerOneTurn)
 				{
+					//Si era el turno del jugador 1 y la cantida de bolas metidas es igual al total entonces gano, en caso contrario gana el jugador 2
 					if (counterStriped == strippedBallsTotal)
 					{
 						playerOneWon = true;
@@ -176,7 +214,9 @@ void Game::HoleBallCollision(vector<Hole*> _holes, Ball* _ball)
 				}
 				gameOver = true;
 			}
-			if (_ball->GetType() == TypeOfBall::STRIPED)
+
+			//Si metieron una bola entonces cambia de turno, dependiendo sea el caso
+			if (_ball->GetType() == TypeOfBall::REDBALL)
 			{
 				if (!playerOneTurn)
 				{
@@ -184,7 +224,7 @@ void Game::HoleBallCollision(vector<Hole*> _holes, Ball* _ball)
 				}
 				_ball->SetOnGame(false);
 			}
-			if (_ball->GetType() == TypeOfBall::SMOOTH)
+			if (_ball->GetType() == TypeOfBall::BLUEBALL)
 			{
 				if (playerOneTurn)
 				{
@@ -197,6 +237,7 @@ void Game::HoleBallCollision(vector<Hole*> _holes, Ball* _ball)
 	}
 }
 
+//Checkea las bolas en juego
 int Game::CheckBalls(vector<Ball*> _balls)
 {
 	int counter = 0;
@@ -214,22 +255,30 @@ void Game::Update()
 {
 	if (!gameOver)
 	{
+		//Recuento de bolas en juego
 		int previousBallsOnGame = CheckBalls(balls);
+
+		//Bolas en movimiento
 		int ballsStill = 0;
-		for (unsigned int i = 0; i < balls.size(); i++) {
+
+		//Llamado a las colisiones
+		for (unsigned int i = 0; i < balls.size(); i++) 
+		{
 			BorderBallCollision(borders, balls[i]);
 			HoleBallCollision(holes, balls[i]);
 		}
 		BallBallCollision(balls);
+
+		//Velocida de las bolas en juego, ya que queremos que todas las bolas se paren antes de poder seguir
 		for (unsigned int i = 0; i < balls.size(); i++)
 		{
-
 			if (balls[i]->GetVelocity().x == 0 && balls[i]->GetVelocity().y == 0)
 			{
 				ballsStill++;
 			}
-
 		}
+
+		//Cuento las bolas para saber si estan todas quietas
 		if (ballsStill == 16)
 		{
 			allBallsStill = true;
@@ -240,6 +289,7 @@ void Game::Update()
 		}
 		ballsOnGame = CheckBalls(balls);
 
+		//Si hay bolas en juego y la bola blanca no esta siendo golpeada y todas las bolas estan en velocidad 0, entonces cambio de turno
 		if (previousBallsOnGame == ballsOnGame && whiteBallHit && allBallsStill)
 		{
 			playerOneTurn = !playerOneTurn;
@@ -280,17 +330,6 @@ void Game::Draw()
 			DrawText("P2", screenWidth / 4 - 60, screenHeight / 4 - 180, 40, BLACK);
 		}
 
-	}
-	else
-	{
-		if (playerOneWon)
-		{
-			DrawTexture(playerOneWins, 0, 0, WHITE);
-		}
-		else if (playerTwoWon)
-		{
-			DrawTexture(playerTwoWins, 0, 0, WHITE);
-		}
 	}
 
 	EndDrawing();
@@ -347,27 +386,28 @@ void Game::Init()
 	borders.push_back(new Border(BorderPosition::LEFT, left));
 	borders.push_back(new Border(BorderPosition::RIGHT, right));
 	balls.push_back(new Ball({ static_cast<float>(screenWidth * 2 / 10),static_cast<float>(screenHeight / 2) }, WHITE, TypeOfBall::WHITEBALL, 0));
-	balls.push_back(new Ball({ static_cast<float>(screenWidth * 7 / 10),static_cast<float>(screenHeight * 5 / 10) }, RED, TypeOfBall::STRIPED, 1));
-	balls.push_back(new Ball({ static_cast<float>(screenWidth * 7.4f / 10),screenHeight * 4.6f / 10 }, RED, TypeOfBall::STRIPED, 2));
-	balls.push_back(new Ball({ screenWidth * 7.4f / 10,screenHeight * 5.4f / 10 }, BLUE, TypeOfBall::SMOOTH, 3));
-	balls.push_back(new Ball({ screenWidth * 7.8f / 10,screenHeight * 4.2f / 10 }, BLUE, TypeOfBall::SMOOTH, 4));
+	balls.push_back(new Ball({ static_cast<float>(screenWidth * 7 / 10),static_cast<float>(screenHeight * 5 / 10) }, RED, TypeOfBall::REDBALL, 1));
+	balls.push_back(new Ball({ static_cast<float>(screenWidth * 7.4f / 10),screenHeight * 4.6f / 10 }, RED, TypeOfBall::REDBALL, 2));
+	balls.push_back(new Ball({ screenWidth * 7.4f / 10,screenHeight * 5.4f / 10 }, BLUE, TypeOfBall::BLUEBALL, 3));
+	balls.push_back(new Ball({ screenWidth * 7.8f / 10,screenHeight * 4.2f / 10 }, BLUE, TypeOfBall::BLUEBALL, 4));
 	balls.push_back(new Ball({ screenWidth * 7.8f / 10,screenHeight * 5 / 10 }, BLACK, TypeOfBall::BLACKBALL, 5));
-	balls.push_back(new Ball({ screenWidth * 7.8f / 10,screenHeight * 5.8f / 10 }, RED, TypeOfBall::STRIPED, 6));
-	balls.push_back(new Ball({ screenWidth * 8.2f / 10,screenHeight * 3.5f / 10 }, RED, TypeOfBall::STRIPED, 7));
-	balls.push_back(new Ball({ screenWidth * 8.2f / 10,screenHeight * 4.5f / 10 }, BLUE, TypeOfBall::SMOOTH, 8));
-	balls.push_back(new Ball({ screenWidth * 8.2f / 10,screenHeight * 5.5f / 10 }, RED, TypeOfBall::STRIPED, 9));
-	balls.push_back(new Ball({ screenWidth * 8.2f / 10,screenHeight * 6.5f / 10 }, BLUE, TypeOfBall::SMOOTH, 10));
-	balls.push_back(new Ball({ screenWidth * 8.6f / 10,screenHeight * 3 / 10 }, BLUE, TypeOfBall::SMOOTH, 11));
-	balls.push_back(new Ball({ screenWidth * 8.6f / 10,screenHeight * 4 / 10 }, RED, TypeOfBall::STRIPED, 12));
-	balls.push_back(new Ball({ screenWidth * 8.6f / 10,screenHeight * 5 / 10 }, BLUE, TypeOfBall::SMOOTH, 13));
-	balls.push_back(new Ball({ screenWidth * 8.6f / 10,screenHeight * 6 / 10 }, BLUE, TypeOfBall::SMOOTH, 14));
-	balls.push_back(new Ball({ screenWidth * 8.6f / 10,screenHeight * 7 / 10 }, RED, TypeOfBall::STRIPED, 15));
+	balls.push_back(new Ball({ screenWidth * 7.8f / 10,screenHeight * 5.8f / 10 }, RED, TypeOfBall::REDBALL, 6));
+	balls.push_back(new Ball({ screenWidth * 8.2f / 10,screenHeight * 3.5f / 10 }, RED, TypeOfBall::REDBALL, 7));
+	balls.push_back(new Ball({ screenWidth * 8.2f / 10,screenHeight * 4.5f / 10 }, BLUE, TypeOfBall::BLUEBALL, 8));
+	balls.push_back(new Ball({ screenWidth * 8.2f / 10,screenHeight * 5.5f / 10 }, RED, TypeOfBall::REDBALL, 9));
+	balls.push_back(new Ball({ screenWidth * 8.2f / 10,screenHeight * 6.5f / 10 }, BLUE, TypeOfBall::BLUEBALL, 10));
+	balls.push_back(new Ball({ screenWidth * 8.6f / 10,screenHeight * 3 / 10 }, BLUE, TypeOfBall::BLUEBALL, 11));
+	balls.push_back(new Ball({ screenWidth * 8.6f / 10,screenHeight * 4 / 10 }, RED, TypeOfBall::REDBALL, 12));
+	balls.push_back(new Ball({ screenWidth * 8.6f / 10,screenHeight * 5 / 10 }, BLUE, TypeOfBall::BLUEBALL, 13));
+	balls.push_back(new Ball({ screenWidth * 8.6f / 10,screenHeight * 6 / 10 }, BLUE, TypeOfBall::BLUEBALL, 14));
+	balls.push_back(new Ball({ screenWidth * 8.6f / 10,screenHeight * 7 / 10 }, RED, TypeOfBall::REDBALL, 15));
 }
 
 void Game::Input()
 {
 	Vector2 mousePosition = GetMousePosition();
 
+	//Si presiono el boton izquierdo y la velocidad de las bolas es igual a 0 entonces puedo llamar a HIT()
 	if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && balls[0]->GetVelocity().x == 0 && balls[0]->GetVelocity().y == 0 && allBallsStill)
 	{
 		balls[0]->Hit(mousePosition);
