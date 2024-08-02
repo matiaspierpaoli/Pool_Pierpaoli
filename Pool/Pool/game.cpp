@@ -137,7 +137,7 @@ void Game::BorderBallCollision(vector<Border*> _borders, Ball* _ball)
 		{
 			if (_ball->GetPosition().x + radius >= borders[i]->GetBorderRec().x && _ball->GetPosition().y + radius >= borders[i]->GetBorderRec().y && _ball->GetPosition().y - radius <= borders[i]->GetBorderRec().y + borders[i]->GetBorderRec().height) 
 			{
-				_ball->SetPosition({ _ball->GetPosition().x - radius , _ball->GetPosition().y });
+				_ball->SetPosition({ _ball->GetPosition().x - 0.1f , _ball->GetPosition().y });
 				_ball->SetVelocity({ -_ball->GetVelocity().x / 2, _ball->GetVelocity().y / 2 });
 			}
 		}
